@@ -54,4 +54,9 @@
       <Filter>Source\ClimbingSystem53</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Source\ClimbingSystem53\DebugHelper.h">
+      <Filter>Source\ClimbingSystem53</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

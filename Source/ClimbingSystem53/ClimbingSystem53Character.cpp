@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "DebugHelper.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -67,6 +69,8 @@ void AClimbingSystem53Character::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	Debug::Print(TEXT("Debug Working"));
 }
 
 //////////////////////////////////////////////////////////////////////////
