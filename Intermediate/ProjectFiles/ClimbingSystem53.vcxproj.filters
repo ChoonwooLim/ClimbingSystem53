@@ -11,6 +11,9 @@
     <None Include="..\..\Source\ClimbingSystem53Editor.Target.cs">
       <Filter>Source</Filter>
     </None>
+    <None Include="..\..\.gitattributes" />
+    <None Include="..\..\.gitignore" />
+    <None Include="..\..\.vsconfig" />
     <Filter Include="Config">
       <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
     </Filter>
@@ -53,10 +56,26 @@
     <ClInclude Include="..\..\Source\ClimbingSystem53\ClimbingSystem53GameMode.h">
       <Filter>Source\ClimbingSystem53</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\Source\ClimbingSystem53\DebugHelper.h">
       <Filter>Source\ClimbingSystem53</Filter>
+    </ClInclude>
+    <Filter Include="Source\ClimbingSystem53\Private">
+      <UniqueIdentifier>{B8634316-895C-3129-8AAD-9055D10B6B11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\ClimbingSystem53\Private\Components">
+      <UniqueIdentifier>{E7EC4DAC-CF87-3173-B511-C5571DA8B6F2}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ClimbingSystem53\Private\Components\CustomMovementComponent.cpp">
+      <Filter>Source\ClimbingSystem53\Private\Components</Filter>
+    </ClCompile>
+    <Filter Include="Source\ClimbingSystem53\Public">
+      <UniqueIdentifier>{A8103D5F-85BC-3907-B5D1-98C5BF55EB8B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\ClimbingSystem53\Public\Components">
+      <UniqueIdentifier>{F1E9C952-695F-3757-B35E-4DC8EDE8C1F8}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\ClimbingSystem53\Public\Components\CustomMovementComponent.h">
+      <Filter>Source\ClimbingSystem53\Public\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
