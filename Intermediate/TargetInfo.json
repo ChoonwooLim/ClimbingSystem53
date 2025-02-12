@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "ClimbingSystem53",
+			"Path": "..\\Source\\ClimbingSystem53.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "ClimbingSystem53Editor",
+			"Path": "..\\Source\\ClimbingSystem53Editor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

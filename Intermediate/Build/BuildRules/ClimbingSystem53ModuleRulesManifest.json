@@ -1,0 +1,8 @@
+{
+	"SourceFiles": [
+		"D:\\00_UnrealWork\\ClimbingSystem53\\Source\\ClimbingSystem53\\ClimbingSystem53.Build.cs",
+		"D:\\00_UnrealWork\\ClimbingSystem53\\Source\\ClimbingSystem53.Target.cs",
+		"D:\\00_UnrealWork\\ClimbingSystem53\\Source\\ClimbingSystem53Editor.Target.cs"
+	],
+	"EngineVersion": "5.3.2"
+}
