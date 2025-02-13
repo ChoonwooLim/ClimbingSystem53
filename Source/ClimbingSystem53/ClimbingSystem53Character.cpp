@@ -13,7 +13,6 @@
 #include "DebugHelper.h"
 
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
 // AClimbingSystem53Character
@@ -29,8 +28,10 @@ AClimbingSystem53Character::AClimbingSystem53Character(const FObjectInitializer&
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-
+	
 	CustomMovementComponent = Cast<UCustomMovementComponent>(GetCharacterMovement());
+
+
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
@@ -104,10 +105,7 @@ void AClimbingSystem53Character::SetupPlayerInputComponent(UInputComponent* Play
 		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Started, this, &AClimbingSystem53Character::OnFlyAction);
 
 	}
-	else
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-	}
+	
 }
 
 void AClimbingSystem53Character::Move(const FInputActionValue& Value)
