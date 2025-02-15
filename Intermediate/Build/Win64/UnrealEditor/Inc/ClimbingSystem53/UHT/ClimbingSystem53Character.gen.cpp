@@ -65,14 +65,6 @@ void EmptyLinkFunctionForGeneratedCodeClimbingSystem53Character() {}
 		static const UECodeGen_Private::FMetaDataPairParam NewProp_ClimbAction_MetaData[];
 #endif
 		static const UECodeGen_Private::FObjectPropertyParams NewProp_ClimbAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_SwimAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_SwimAction;
-#if WITH_METADATA
-		static const UECodeGen_Private::FMetaDataPairParam NewProp_FlyAction_MetaData[];
-#endif
-		static const UECodeGen_Private::FObjectPropertyParams NewProp_FlyAction;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 		static const FCppClassTypeInfoStatic StaticCppClassTypeInfo;
 		static const UECodeGen_Private::FClassParams ClassParams;
@@ -189,44 +181,10 @@ void EmptyLinkFunctionForGeneratedCodeClimbingSystem53Character() {}
 	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_ClimbAction_MetaData[] = {
 		{ "AllowPrivateAccess", "true" },
 		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Climb Input Action */" },
-#endif
 		{ "ModuleRelativePath", "ClimbingSystem53Character.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Climb Input Action" },
-#endif
 	};
 #endif
 	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_ClimbAction = { "ClimbAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AClimbingSystem53Character, ClimbAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_ClimbAction_MetaData), Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_ClimbAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_SwimAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Swim Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ClimbingSystem53Character.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Swim Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_SwimAction = { "SwimAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AClimbingSystem53Character, SwimAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_SwimAction_MetaData), Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_SwimAction_MetaData) };
-#if WITH_METADATA
-	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_FlyAction_MetaData[] = {
-		{ "AllowPrivateAccess", "true" },
-		{ "Category", "Input" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/** Fly Input Action */" },
-#endif
-		{ "ModuleRelativePath", "ClimbingSystem53Character.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Fly Input Action" },
-#endif
-	};
-#endif
-	const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_FlyAction = { "FlyAction", nullptr, (EPropertyFlags)0x0040000000000015, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(AClimbingSystem53Character, FlyAction), Z_Construct_UClass_UInputAction_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_FlyAction_MetaData), Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_FlyAction_MetaData) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_AClimbingSystem53Character_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_CameraBoom,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_FollowCamera,
@@ -236,8 +194,6 @@ void EmptyLinkFunctionForGeneratedCodeClimbingSystem53Character() {}
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_MoveAction,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_LookAction,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_ClimbAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_SwimAction,
-		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_AClimbingSystem53Character_Statics::NewProp_FlyAction,
 	};
 	const FCppClassTypeInfoStatic Z_Construct_UClass_AClimbingSystem53Character_Statics::StaticCppClassTypeInfo = {
 		TCppClassTypeTraits<AClimbingSystem53Character>::IsAbstract,
@@ -277,9 +233,9 @@ void EmptyLinkFunctionForGeneratedCodeClimbingSystem53Character() {}
 		static const FClassRegisterCompiledInInfo ClassInfo[];
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_ClimbingSystem53Character_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_AClimbingSystem53Character, AClimbingSystem53Character::StaticClass, TEXT("AClimbingSystem53Character"), &Z_Registration_Info_UClass_AClimbingSystem53Character, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AClimbingSystem53Character), 3725087090U) },
+		{ Z_Construct_UClass_AClimbingSystem53Character, AClimbingSystem53Character::StaticClass, TEXT("AClimbingSystem53Character"), &Z_Registration_Info_UClass_AClimbingSystem53Character, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AClimbingSystem53Character), 2825309426U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_ClimbingSystem53Character_h_1215537272(TEXT("/Script/ClimbingSystem53"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_ClimbingSystem53Character_h_3058845086(TEXT("/Script/ClimbingSystem53"),
 		Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_ClimbingSystem53Character_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_ClimbingSystem53Character_h_Statics::ClassInfo),
 		nullptr, 0,
 		nullptr, 0);
