@@ -23,6 +23,7 @@ class AClimbingSystem53Character : public ACharacter
 public:
 	AClimbingSystem53Character(const FObjectInitializer& ObjectInitializer);
 
+
 private:
 
 	/** Camera boom positioning the camera behind the character */
@@ -88,7 +89,8 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	// To add mapping context
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
+
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -97,5 +99,34 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	FORCEINLINE UCustomMovementComponent* GetCustomMovementComponent() const { return CustomMovementComponent; }
+
+	virtual void Tick(float DeltaTime) override;
+//-------------------------------------------------------
+	/*비행 기능 관련 변수 및 함수 추가.*/
+
+private:
+	// 캐릭터의 비행 여부를 나타내는 변수
+	bool bIsFlying;
+
+	// 비행 속도
+	float FlyingSpeed;
+
+	// 비행 기능 관련 함수
+	void StartFlying();
+	void StopFlying();
+	void FlyMoveForward(float Value);
+	void FlyMoveRight(float Value);
+	void FlyUpDown(float Value);
+
+	//속도 변수 추가
+	private:
+		float CurrentFlySpeed;
+		float FlyAcceleration;
+
+  //속도 변화 로직 추가
+
+
+//------------------------------------------------------
+
 };
 

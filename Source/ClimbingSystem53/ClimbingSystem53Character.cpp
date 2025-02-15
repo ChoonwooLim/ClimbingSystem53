@@ -28,7 +28,16 @@ AClimbingSystem53Character::AClimbingSystem53Character(const FObjectInitializer&
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+//------------------------------------------------------------------------------
+	PrimaryActorTick.bCanEverTick = true;
 
+	bIsFlying = false;  // 기본적으로 비행 상태가 아님
+	FlyingSpeed = 1200.0f; // 비행 속도 설정
+
+	//속도 변화 로직 추가
+	CurrentFlySpeed = 0.0f;
+	FlyAcceleration = 500.0f; // 점진적 가속도
+//-------------------------------------------------------------------------------
 	
 	CustomMovementComponent = Cast<UCustomMovementComponent>(GetCharacterMovement());
 
@@ -83,6 +92,23 @@ void AClimbingSystem53Character::BeginPlay()
 
 void AClimbingSystem53Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+	//--------------------------------------------------------------
+	/*캐릭터가 특정 키(예: F)를 누르면 비행 모드로 진입하고, 다시 누르면 걷기로 전환되도록 만들자.*/
+
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	// 비행 모드 전환 (H 키)
+	PlayerInputComponent->BindAction("ToggleFly", IE_Pressed, this, &AClimbingSystem53Character::StartFlying);
+
+	// 비행 방향 조작
+	PlayerInputComponent->BindAxis("MoveForward", this, &AClimbingSystem53Character::FlyMoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AClimbingSystem53Character::FlyMoveRight);
+	PlayerInputComponent->BindAxis("MoveUp", this, &AClimbingSystem53Character::FlyUpDown);
+	
+	
+	
+	//------------------------------------------------------------------
+	
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
@@ -173,11 +199,113 @@ void AClimbingSystem53Character::OnSwimAction(const FInputActionValue& Value)
 	}
 	else
 	{
-		CustomMovementComponent->ToggleClimbing(false);
+		CustomMovementComponent->ToggleSwimming(false);
 	}
 }
 
+//-------------------------------------------------------
+/*캐릭터가 특정 키(예: F)를 누르면 비행 모드로 진입하고, 다시 누르면 걷기로 전환되도록 만들자.*/
+
+void AClimbingSystem53Character::StartFlying()
+{
+	bIsFlying = !bIsFlying; // 비행 모드 전환
+
+	if (bIsFlying)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		UE_LOG(LogTemp, Warning, TEXT("Flying Mode Activated!"));
+	}
+	else
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		UE_LOG(LogTemp, Warning, TEXT("Flying Mode Deactivated!"));
+	}
+}
+
+void AClimbingSystem53Character::StopFlying()
+{
+	if (!bIsFlying) return;
+
+	// 비행 모드 비활성화
+	bIsFlying = false;
+
+	// 이동 모드를 걷기로 변경
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+	// 현재 속도 초기화
+	GetCharacterMovement()->Velocity = FVector::ZeroVector;
+
+	UE_LOG(LogTemp, Warning, TEXT("Flying Mode Deactivated!"));
+}
+
+/*비행 모드에서는 캐릭터가 슈퍼맨처럼 전후좌우 및 상하로 이동해야 해.
+이를 위해 Tick() 함수에서 매 프레임마다 캐릭터의 이동을 계산하도록 만들자.*/
+
+void AClimbingSystem53Character::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsFlying)
+	{
+		// 중력 무시
+		GetCharacterMovement()->Velocity.Z = 0.0f;
+
+		// 기울어지는 효과 추가
+		FRotator NewRotation = GetActorRotation();
+		NewRotation.Pitch = FMath::FInterpTo(NewRotation.Pitch, -GetVelocity().Z * 0.1f, DeltaTime, 2.0f);
+		SetActorRotation(NewRotation);
+	}
+}
+
+void AClimbingSystem53Character::FlyMoveForward(float Value)
+{
+	if (!bIsFlying || FMath::IsNearlyZero(Value)) return;
+
+	// 속도 증가
+	CurrentFlySpeed = FMath::FInterpTo(CurrentFlySpeed, FlyingSpeed, GetWorld()->GetDeltaSeconds(), FlyAcceleration);
+
+	FVector ForwardDir = GetActorForwardVector();
+	AddMovementInput(ForwardDir, Value * FlyingSpeed);
+}
+
+void AClimbingSystem53Character::FlyMoveRight(float Value)
+{
+	if (!bIsFlying || FMath::IsNearlyZero(Value)) return;
+
+	// 속도 증가
+	CurrentFlySpeed = FMath::FInterpTo(CurrentFlySpeed, FlyingSpeed, GetWorld()->GetDeltaSeconds(), FlyAcceleration);
+
+	FVector RightDir = GetActorRightVector();
+	AddMovementInput(RightDir, Value * FlyingSpeed);
+}
+
+
+	
+
+	
+
+void AClimbingSystem53Character::FlyUpDown(float Value)
+{
+	if (!bIsFlying) return;
+
+	FVector UpDir = FVector::UpVector;
+	AddMovementInput(UpDir, Value * FlyingSpeed);
+}
+
 void AClimbingSystem53Character::OnFlyAction(const FInputActionValue& Value)
+{
+	if (!bIsFlying)
+	{
+		StartFlying();
+	}
+	else
+	{
+		StopFlying();
+	}
+
+}
+//---------------------------------------------------------------
+/*  void AClimbingSystem53Character::OnFlyAction(const FInputActionValue& Value)
 {
 	//Debug::Print(TEXT("Fly action started"));
 
@@ -189,6 +317,7 @@ void AClimbingSystem53Character::OnFlyAction(const FInputActionValue& Value)
 	}
 	else
 	{
-		CustomMovementComponent->ToggleClimbing(false);
+		CustomMovementComponent->ToggleFlying(false);   
 	}
 }
+*/
