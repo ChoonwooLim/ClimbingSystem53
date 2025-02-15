@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+
 #include "DebugHelper.h"
 
 
@@ -146,15 +147,48 @@ void AClimbingSystem53Character::Look(const FInputActionValue& Value)
 
 void AClimbingSystem53Character::OnClimbActionStarted(const FInputActionValue& Value)
 {
-	Debug::Print(TEXT("Climb action started"));
+	//Debug::Print(TEXT("Climb action started"));
+
+	if (!CustomMovementComponent) return;
+
+	if (!CustomMovementComponent->IsClimbing())
+	{
+		CustomMovementComponent->ToggleClimbing(true);
+	}
+	else
+	{
+		CustomMovementComponent->ToggleClimbing(false);
+	}
 }
 
 void AClimbingSystem53Character::OnSwimAction(const FInputActionValue& Value)
 {
-	Debug::Print(TEXT("Swim action started"));
+	//Debug::Print(TEXT("Swim action started"));
+
+	if (!CustomMovementComponent) return;
+
+	if (!CustomMovementComponent->IsSwimming())
+	{
+		CustomMovementComponent->ToggleSwimming(true);
+	}
+	else
+	{
+		CustomMovementComponent->ToggleClimbing(false);
+	}
 }
 
 void AClimbingSystem53Character::OnFlyAction(const FInputActionValue& Value)
 {
-	Debug::Print(TEXT("Fly action started"));
+	//Debug::Print(TEXT("Fly action started"));
+
+	if (!CustomMovementComponent) return;
+
+	if (!CustomMovementComponent->IsFlying())
+	{
+		CustomMovementComponent->ToggleFlying(true);
+	}
+	else
+	{
+		CustomMovementComponent->ToggleClimbing(false);
+	}
 }

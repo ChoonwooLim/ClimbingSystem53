@@ -11,10 +11,69 @@ void EmptyLinkFunctionForGeneratedCodeCustomMovementComponent() {}
 // Cross Module References
 	CLIMBINGSYSTEM53_API UClass* Z_Construct_UClass_UCustomMovementComponent();
 	CLIMBINGSYSTEM53_API UClass* Z_Construct_UClass_UCustomMovementComponent_NoRegister();
+	CLIMBINGSYSTEM53_API UEnum* Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode();
 	ENGINE_API UClass* Z_Construct_UClass_UCharacterMovementComponent();
 	ENGINE_API UEnum* Z_Construct_UEnum_Engine_EObjectTypeQuery();
 	UPackage* Z_Construct_UPackage__Script_ClimbingSystem53();
 // End Cross Module References
+	static FEnumRegistrationInfo Z_Registration_Info_UEnum_ECustomMovementMode;
+	static UEnum* ECustomMovementMode_StaticEnum()
+	{
+		if (!Z_Registration_Info_UEnum_ECustomMovementMode.OuterSingleton)
+		{
+			Z_Registration_Info_UEnum_ECustomMovementMode.OuterSingleton = GetStaticEnum(Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode, (UObject*)Z_Construct_UPackage__Script_ClimbingSystem53(), TEXT("ECustomMovementMode"));
+		}
+		return Z_Registration_Info_UEnum_ECustomMovementMode.OuterSingleton;
+	}
+	template<> CLIMBINGSYSTEM53_API UEnum* StaticEnum<ECustomMovementMode::Type>()
+	{
+		return ECustomMovementMode_StaticEnum();
+	}
+	struct Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics
+	{
+		static const UECodeGen_Private::FEnumeratorParam Enumerators[];
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Enum_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FEnumParams EnumParams;
+	};
+	const UECodeGen_Private::FEnumeratorParam Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::Enumerators[] = {
+		{ "ECustomMovementMode::MOVE_Climb", (int64)ECustomMovementMode::MOVE_Climb },
+		{ "ECustomMovementMode::MOVE_Fly", (int64)ECustomMovementMode::MOVE_Fly },
+		{ "ECustomMovementMode::MOVE_Swim", (int64)ECustomMovementMode::MOVE_Swim },
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::Enum_MetaDataParams[] = {
+		{ "BlueprintType", "true" },
+		{ "ModuleRelativePath", "Public/Components/CustomMovementComponent.h" },
+		{ "MOVE_Climb.DisplayName", "Climb Mode" },
+		{ "MOVE_Climb.Name", "ECustomMovementMode::MOVE_Climb" },
+		{ "MOVE_Fly.DisplayName", "Fly Mode" },
+		{ "MOVE_Fly.Name", "ECustomMovementMode::MOVE_Fly" },
+		{ "MOVE_Swim.DisplayName", "Swim Mode" },
+		{ "MOVE_Swim.Name", "ECustomMovementMode::MOVE_Swim" },
+	};
+#endif
+	const UECodeGen_Private::FEnumParams Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::EnumParams = {
+		(UObject*(*)())Z_Construct_UPackage__Script_ClimbingSystem53,
+		nullptr,
+		"ECustomMovementMode",
+		"ECustomMovementMode::Type",
+		Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::Enumerators,
+		RF_Public|RF_Transient|RF_MarkAsNative,
+		UE_ARRAY_COUNT(Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::Enumerators),
+		EEnumFlags::None,
+		(uint8)UEnum::ECppForm::Namespaced,
+		METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::Enum_MetaDataParams), Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::Enum_MetaDataParams)
+	};
+	UEnum* Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode()
+	{
+		if (!Z_Registration_Info_UEnum_ECustomMovementMode.InnerSingleton)
+		{
+			UECodeGen_Private::ConstructUEnum(Z_Registration_Info_UEnum_ECustomMovementMode.InnerSingleton, Z_Construct_UEnum_ClimbingSystem53_ECustomMovementMode_Statics::EnumParams);
+		}
+		return Z_Registration_Info_UEnum_ECustomMovementMode.InnerSingleton;
+	}
 	void UCustomMovementComponent::StaticRegisterNativesUCustomMovementComponent()
 	{
 	}
@@ -127,13 +186,17 @@ void EmptyLinkFunctionForGeneratedCodeCustomMovementComponent() {}
 	UCustomMovementComponent::~UCustomMovementComponent() {}
 	struct Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics
 	{
+		static const FEnumRegisterCompiledInInfo EnumInfo[];
 		static const FClassRegisterCompiledInInfo ClassInfo[];
+	};
+	const FEnumRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics::EnumInfo[] = {
+		{ ECustomMovementMode_StaticEnum, TEXT("ECustomMovementMode"), &Z_Registration_Info_UEnum_ECustomMovementMode, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 2720674388U) },
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics::ClassInfo[] = {
 		{ Z_Construct_UClass_UCustomMovementComponent, UCustomMovementComponent::StaticClass, TEXT("UCustomMovementComponent"), &Z_Registration_Info_UClass_UCustomMovementComponent, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UCustomMovementComponent), 1487209201U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_1647463907(TEXT("/Script/ClimbingSystem53"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_4177411987(TEXT("/Script/ClimbingSystem53"),
 		Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics::ClassInfo),
 		nullptr, 0,
-		nullptr, 0);
+		Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_00_UnrealWork_ClimbingSystem53_Source_ClimbingSystem53_Public_Components_CustomMovementComponent_h_Statics::EnumInfo));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
