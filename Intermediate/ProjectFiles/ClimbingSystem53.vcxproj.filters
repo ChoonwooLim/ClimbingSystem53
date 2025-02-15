@@ -78,4 +78,14 @@
       <Filter>Source\ClimbingSystem53\Public\Components</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FlyingBoard.h">
+      <Filter>Source\ClimbingSystem53</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FlyingBoard.cpp">
+      <Filter>Source\ClimbingSystem53</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
