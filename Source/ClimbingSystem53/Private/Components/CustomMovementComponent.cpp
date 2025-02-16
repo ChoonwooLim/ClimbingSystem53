@@ -248,6 +248,16 @@ bool UCustomMovementComponent::CanStartClimbing()
     return true;
 }
 
+void UCustomMovementComponent::StartClimbing()
+{
+
+}
+
+void UCustomMovementComponent::StopClimbing()
+{
+    SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Climb);
+}
+
 bool UCustomMovementComponent::CanStartSwimming()
 {
     return IsInWater(); // 물 속에 있는지 확인하여 수영 가능 여부 반환

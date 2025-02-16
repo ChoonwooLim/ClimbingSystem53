@@ -52,6 +52,10 @@ private:
 
 	bool CanStartClimbing();
 
+	void StartClimbing();
+
+	void StopClimbing();
+
 #pragma endregion
 
 #pragma region SwimCore
