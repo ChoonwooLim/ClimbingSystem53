@@ -69,6 +69,8 @@ private:
 
 	void PhysClimb(float deltaTime, int32 Iterations);
 
+	void ProcessClimbableSurfaceInfo();
+
 #pragma endregion
 
 #pragma region SwimCore
@@ -86,7 +88,11 @@ private:
 
 #pragma region ClimbCoreVariables
 
-	TArray<FHitResult> ClimbableSurfacesTrasedResults;
+	TArray<FHitResult> ClimbableSurfacesTrasedResults; //클라이밍 가능한 표면들의 충돌 정보를 저장.
+
+	FVector CurrentClimbableSurfaceLocation; //현재 클라이밍 중인 표면의 위치(충돌지점)를 저장.
+
+	FVector CurrentClimbableSurfaceNomal; //현재 클라이밍 중인 표면의 법선 벡터를 저장.
 
 #pragma endregion
 

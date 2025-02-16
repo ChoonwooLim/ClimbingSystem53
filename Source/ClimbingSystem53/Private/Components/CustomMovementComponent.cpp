@@ -306,6 +306,8 @@ void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Un
             //MIN_TICK_TIME보다 작은 경우 너무 짧은 시간(=무시할 수 있을 정도로 작은 시간)이므로 아예 이동 계산을 하지 않고 리턴.
         }
             /*Process all the climbable surface info*/
+        TraceClimbableSurfaces();
+        ProcessClimbableSurfaceInfo();
 
             /*Check if we should climbing*/
 
@@ -359,6 +361,48 @@ void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Un
 
 }
 
+void UCustomMovementComponent::ProcessClimbableSurfaceInfo() //감지된 클라이밍 가능한 표면들에 대한 정보를 처리하여 평균적인 위치와 방향(법선 벡터)을 계산
+{
+    // 여러 개의 충돌 데이터를 합산할 것이므로 초기값을 ZeroVector로 설정.
+    CurrentClimbableSurfaceLocation = FVector::ZeroVector; //현재 클라이밍 표면의 위치를 초기화 → (0,0,0).
+    CurrentClimbableSurfaceNomal = FVector::ZeroVector; //현재 클라이밍 표면의 Nomal을 초기화 → (0,0,0).
+
+    if (ClimbableSurfacesTrasedResults.IsEmpty()) return; //클라이밍 가능한 표면이 없으면 함수 종료
+    int32 SurfaceCount = ClimbableSurfacesTrasedResults.Num();
+
+    //감지된 모든 클라이밍 표면의 정보를 합산 : 여러 개의 충돌 데이터가 있을 경우, 평균적인 위치와 방향을 구하기 위해 값들을 더함.
+    /*for 루프를 사용하여 모든 감지된 충돌(FHitResult)을 순회.
+      각 충돌의 충돌 위치(ImpactPoint)를 합산 → CurrentClimbableSurfaceLocation에 누적.
+      각 충돌의 법선(ImpactNormal)을 합산 → CurrentClimbableSurfaceNomal에 누적.*/
+    for (const FHitResult& TracedHitResult : ClimbableSurfacesTrasedResults)
+    {
+        CurrentClimbableSurfaceLocation += TracedHitResult.ImpactPoint;
+        CurrentClimbableSurfaceNomal += TracedHitResult.ImpactNormal;
+    }
+
+    //이렇게 하면 벡터의 길이가 너무 작아서 정규화가 불가능한 경우 안전하게 처리됨.
+    CurrentClimbableSurfaceLocation /= SurfaceCount;
+
+    if (!CurrentClimbableSurfaceNomal.IsNearlyZero()) //법선 벡터(CurrentClimbableSurfaceNomal)가 0에 가까울 경우 정규화를 피함.
+    {
+        CurrentClimbableSurfaceNomal = CurrentClimbableSurfaceNomal.GetSafeNormal();
+    }
+
+    //평균 위치 계산
+    CurrentClimbableSurfaceLocation /= ClimbableSurfacesTrasedResults.Num();
+    /*감지된 표면 개수(ClimbableSurfacesTrasedResults.Num())로 CurrentClimbableSurfaceLocation을 나누어 평균 위치를 계산.
+      📌 이렇게 하면 클라이밍 가능한 여러 개의 표면이 감지되었을 때, 그 중간 위치를 중심으로 이동할 수 있음.*/
+
+    //평균 Nomal 벡터 정규화
+    CurrentClimbableSurfaceNomal = CurrentClimbableSurfaceNomal.GetSafeNormal();
+    /*평균 법선 벡터를 정규화하여 길이를 1.0으로 조정.
+      GetSafeNormal() 함수는 벡터의 길이를 1로 조정하며, 만약 벡터의 길이가 0에 가까우면 안전하게 처리.
+     📌 이렇게 하면 벽 방향을 정확하게 정할 수 있으며, 이동 방향 보정에 사용할 수 있음.*/
+
+    Debug::Print(TEXT("CurrentClimbableSurfaceLocation: ") + CurrentClimbableSurfaceLocation.ToCompactString(), FColor::Cyan, 1);
+    Debug::Print(TEXT("CurrentClimbableSurfaceNomal: ") + CurrentClimbableSurfaceNomal.ToCompactString(), FColor::Red, 2);
+}
+
 bool UCustomMovementComponent::CanStartSwimming()
 {
     return IsInWater(); // 물 속에 있는지 확인하여 수영 가능 여부 반환
@@ -410,7 +454,7 @@ bool UCustomMovementComponent::TraceClimbableSurfaces()
        This defines the trace direction.
        End Position = Start Position + 1 Unit Forward.*/
 
-    ClimbableSurfacesTrasedResults = DoCapsuleTraceMultiByObject(Start,End,true,true);
+    ClimbableSurfacesTrasedResults = DoCapsuleTraceMultiByObject(Start,End,true);
 
     return !ClimbableSurfacesTrasedResults.IsEmpty();
     /*Calls DoCapsuleTraceMultiByObject(), which performs the actual capsule trace.
@@ -437,7 +481,7 @@ FHitResult UCustomMovementComponent::TraceFromEyeHeight(float TraceDistance, flo
     const FVector Start = ComponentLocation + EyeHeightOffset;
     const FVector End = Start + UpdatedComponent->GetForwardVector() * TraceDistance;
 
-     return DoLineTraceSingleByObject(Start, End, true, true);
+     return DoLineTraceSingleByObject(Start, End);
 }
 /*이 함수는 캐릭터의 눈 높이(Eye Height)에서 특정 거리(TraceDistance)까지 라인 트레이스를 수행하는 기능을 합니다.
    즉, 캐릭터의 정면을 따라 특정 거리만큼 라인 트레이스를 발사하여 충돌 여부를 감지할 수 있습니다.*/
