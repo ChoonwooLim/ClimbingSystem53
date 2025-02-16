@@ -36,6 +36,17 @@ void UCustomMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovem
 
 }
 
+void UCustomMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
+{
+    if (IsClimbing())
+    {
+        PhysClimb(deltaTime, Iterations);
+    }
+
+    Super::PhysCustom(deltaTime, Iterations);
+}
+
+
 #pragma region ClimbTraces
 
 /* This function performs a multi-object capsule trace to detect climbable surfaces, such as walls or ledges, in Unreal Engine. 
@@ -281,6 +292,72 @@ void UCustomMovementComponent::StopClimbing()
     SetMovementMode(MOVE_Falling);
 }
 
+void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Unreal Engine에서 캐릭터의 클라이밍(벽 오르기) 기능을 구현하는 핵심 이동 로직
+{
+    if (!UpdatedComponent) //UpdatedComponent가 nullptr인지 확인
+    {
+        // UpdatedComponent가 nullptr이면 충돌할 가능성이 있으므로 체크 필요.
+        return;
+    }
+
+            if (deltaTime < MIN_TICK_TIME) //deltaTime이 너무 작으면 함수 종료
+        {
+            return;
+            //MIN_TICK_TIME보다 작은 경우 너무 짧은 시간(=무시할 수 있을 정도로 작은 시간)이므로 아예 이동 계산을 하지 않고 리턴.
+        }
+            /*Process all the climbable surface info*/
+
+            /*Check if we should climbing*/
+
+        RestorePreAdditiveRootMotionVelocity(); //루트 모션 속도 복원
+        /* 루트 모션을 사용하는 애니메이션(Root Motion)이 있는 경우, 속도를 복원.
+           클라이밍 애니메이션에 의해 속도가 변하는 경우, 이를 다시 적용할 준비를 함.*/
+
+        if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity()) //클라이밍 속도 계산 : 루트 모션(AnimRootMotion)이나 OverrideVelocity가 적용되지 않은 경우에만 속도를 계산.
+        {
+            // Define the max climb speed and acceleration
+            CalcVelocity(deltaTime, 0.f, true, MaxBreakClimbDeceleration); //CalcVelocity()를 호출하여 클라이밍 최대 속도 및 감속
+            /*CalcVelocity() 함수 역할
+              - 속도를 업데이트하는 Unreal Engine 기본 함수 (PhysWalking() 등에서도 사용).
+              - MaxBreakClimbDeceleration: 클라이밍 중 감속량을 나타냄.*/
+        }
+
+        ApplyRootMotionToVelocity(deltaTime); //루트 모션 적용 : 루트 모션(애니메이션 속도)이 있을 경우 현재 속도(Velocity)에 반영
+
+        FVector OldLocation = UpdatedComponent->GetComponentLocation(); //UpdatedComponent의 현재 월드 좌표를 저장
+        const FVector Adjusted = Velocity * deltaTime; //현재 속도(Velocity)를 이용하여 이번 프레임에서 이동할 거리(변위) 계산.
+        FHitResult Hit(1.f); // 충돌 정보를 저장할 구조체 초기화 (Hit.Time = 1.f은 충돌 없음 상태).
+
+        // Handle climb rotation
+        SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit); //벽을 따라 이동 수행
+        /*SafeMoveUpdatedComponent()
+           Adjusted(이동 거리)만큼 이동을 시도.
+           충돌 발생 시 Hit에 충돌 정보 저장.
+           true: 충돌 시 자동으로 처리 (Sweep 방식).*/
+        /*충돌(Hit)이 발생하는 경우
+          벽이 너무 가파르거나 장애물이 있으면 Hit.Time < 1.f가 됨.*/
+
+        if (Hit.Time < 1.f) //이동 중 충돌이 발생한 경우.
+        {
+            //adjust and try again
+            HandleImpact(Hit, deltaTime, Adjusted); //충돌한 표면이 오를 수 있는지 확인하고, 충돌 반응을 처리하는 함수.
+            FVector ClimbDir = Velocity.GetSafeNormal();//Hit.Normal이 아닌 ClimbDir을 사용하여 벽을 타고 자연스럽게 이동.
+            SlideAlongSurface(Adjusted, (1.f - Hit.Time), Hit.Normal, Hit, true); //벽을 타고 이동할 수 있도록 표면을 따라 미끄러지도록 보정.  
+            /*SlideAlongSurface() 역할
+              충돌 후, 벽을 따라 자연스럽게 미끄러지도록 이동 보정.
+              예: 캐릭터가 완전히 멈추지 않고 벽을 따라 옆으로 이동할 수 있도록 함.*/
+        }
+
+        if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity()) //최종 속도 업데이트:애니메이션 루트 모션이 없을 경우, 최종 속도 재계산.
+        {
+            Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / deltaTime;
+            /*실제 이동한 거리 / deltaTime을 이용해 새로운 속도를 계산.
+              이 과정은 클라이밍 중 속도를 자연스럽게 업데이트하는 데 사용됨.*/
+        }
+
+        /*Snap movement to climbable surfaces*/
+
+}
 
 bool UCustomMovementComponent::CanStartSwimming()
 {
