@@ -279,11 +279,6 @@ void AClimbingSystem53Character::FlyMoveRight(float Value)
 	AddMovementInput(RightDir, Value * FlyingSpeed);
 }
 
-
-	
-
-	
-
 void AClimbingSystem53Character::FlyUpDown(float Value)
 {
 	if (!bIsFlying) return;
