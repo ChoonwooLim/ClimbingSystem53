@@ -18,20 +18,27 @@ void UCustomMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 void UCustomMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
-    if(IsClimbing())
+    if(IsClimbing()) // 벽 타기 모드 진입 시
     { 
     bOrientRotationToMovement = false;
     CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(48.f);
     }
 
-    if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == ECustomMovementMode::MOVE_Climb)
+    else if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == ECustomMovementMode::MOVE_Climb)// 벽 타기에서 벗어날 때
     {
         bOrientRotationToMovement = true; 
         CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(96.f);
 
+        // 캐릭터 회전 초기화 (Yaw 유지)
+        const FRotator NewRotation(0.f, UpdatedComponent->GetComponentRotation().Yaw, 0.f);
+        
+        UpdatedComponent->SetRelativeRotation(NewRotation);
+
+        // 즉시 정지
         StopMovementImmediately();
     }
 
+    // 부모 클래스의 기본 이동 모드 변경 로직 수행
     Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 
 }
