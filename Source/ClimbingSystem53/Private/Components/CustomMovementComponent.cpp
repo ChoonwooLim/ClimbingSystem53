@@ -246,13 +246,10 @@ void UCustomMovementComponent::ToggleClimbing(bool bEnableClimb)
         if (CanStartClimbing())
         {
             // Enter the climb stase
-            Debug::Print(TEXT("Can start climbing"));
+            
             StartClimbing();
         }
-        else
-        {
-            Debug::Print(TEXT("Can NOT start climbing"));
-        }
+       
     }
     else
     {
@@ -465,9 +462,7 @@ bool UCustomMovementComponent::CheckShouldStopClimbing()
     }
 
 
-    // 3. 디버그 출력
-    Debug::Print(TEXT("Degree Diff: ") + FString::SanitizeFloat(DegreeDiff), FColor::Cyan, 1);
-
+    
     
    
 
