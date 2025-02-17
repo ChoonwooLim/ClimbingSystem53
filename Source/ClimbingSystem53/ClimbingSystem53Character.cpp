@@ -18,58 +18,64 @@
 //////////////////////////////////////////////////////////////////////////
 // AClimbingSystem53Character
 
+//클래스 초기화 (AClimbingSystem53Character 생성자)
 AClimbingSystem53Character::AClimbingSystem53Character(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer.SetDefaultSubobjectClass<UCustomMovementComponent>(ACharacter::CharacterMovementComponentName))
+/*기본 캐릭터 이동 컴포넌트를 **사용자 정의 이동 컴포넌트(UCustomMovementComponent)**로 교체.
+ACharacter::CharacterMovementComponentName을 사용하여 기본 이동 컴포넌트를 교체.
+Super(ObjectInitializer.SetDefaultSubobjectClass<UCustomMovementComponent>...)을 통해 부모 클래스 초기화.*/
+
 {
+	//콜리전 캡슐 크기 설정
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f); /*CapsuleComponent는 캐릭터의 충돌 영역을 정의.
+                                                                                 높이(96.0f) 및 반지름(42.0f)를 설정하여 충돌 판정을 조정.*/
 		
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
-//------------------------------------------------------------------------------
-	PrimaryActorTick.bCanEverTick = true;
-
-	bIsFlying = false;  // 기본적으로 비행 상태가 아님
-	FlyingSpeed = 1200.0f; // 비행 속도 설정
-
-	//속도 변화 로직 추가
-	CurrentFlySpeed = 0.0f;
-	FlyAcceleration = 500.0f; // 점진적 가속도
-//-------------------------------------------------------------------------------
 	
 	CustomMovementComponent = Cast<UCustomMovementComponent>(GetCharacterMovement());
 
 
+	//기본 이동 설정
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
+	GetCharacterMovement()->bOrientRotationToMovement = true; //캐릭터가 이동하는 방향으로 자동 회전.
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // 회전 속도 설정(500도/초).
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
 	// instead of recompiling to adjust them
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->JumpZVelocity = 700.f; //점프 높이 조절.
+	GetCharacterMovement()->AirControl = 0.35f; //공중에서의 방향 전환 가능성 설정.
+	GetCharacterMovement()->MaxWalkSpeed = 500.f; //최대 이동 속도 500 설정.
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
+	//카메라 설정
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	/*카메라 붐(SpringArmComponent) 생성
+        CameraBoom->TargetArmLength = 400.0f; → 카메라와 캐릭터 사이의 거리 설정.
+        bUsePawnControlRotation = true; → 플레이어가 마우스를 움직이면 카메라가 회전하도록 설정.*/
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	/*FollowCamera는 **카메라 붐(SpringArm)**에 부착됨.
+       bUsePawnControlRotation = false; → 카메라는 붐의 회전에만 영향을 받도록 설정.*/
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
+
+//BeginPlay() - 입력 매핑 컨텍스트 추가
 void AClimbingSystem53Character::BeginPlay()
 {
 	// Call the base class  
@@ -83,7 +89,9 @@ void AClimbingSystem53Character::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
+	/*게임이 시작되면 BeginPlay()가 호출됨.
+       UEnhancedInputLocalPlayerSubsystem을 통해 Enhanced Input System을 활성화.
+       Subsystem->AddMappingContext(DefaultMappingContext, 0); → 기본 입력 매핑 컨텍스트 추가.*/
 
 }
 
@@ -92,22 +100,6 @@ void AClimbingSystem53Character::BeginPlay()
 
 void AClimbingSystem53Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	//--------------------------------------------------------------
-	/*캐릭터가 특정 키(예: F)를 누르면 비행 모드로 진입하고, 다시 누르면 걷기로 전환되도록 만들자.*/
-
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// 비행 모드 전환 (H 키)
-	PlayerInputComponent->BindAction("ToggleFly", IE_Pressed, this, &AClimbingSystem53Character::StartFlying);
-
-	// 비행 방향 조작
-	PlayerInputComponent->BindAxis("MoveForward", this, &AClimbingSystem53Character::FlyMoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AClimbingSystem53Character::FlyMoveRight);
-	PlayerInputComponent->BindAxis("MoveUp", this, &AClimbingSystem53Character::FlyUpDown);
-	
-	
-	
-	//------------------------------------------------------------------
 	
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
@@ -125,16 +117,12 @@ void AClimbingSystem53Character::SetupPlayerInputComponent(UInputComponent* Play
 		//Climbing
 		EnhancedInputComponent->BindAction(ClimbAction, ETriggerEvent::Started, this, &AClimbingSystem53Character::OnClimbActionStarted);
 	
-		//Swimming
-		EnhancedInputComponent->BindAction(SwimAction, ETriggerEvent::Started, this, &AClimbingSystem53Character::OnSwimAction);
-
-		//Flying
-		EnhancedInputComponent->BindAction(FlyAction, ETriggerEvent::Started, this, &AClimbingSystem53Character::OnFlyAction);
-
 	}
 	
 }
 
+
+//기본 이동 (Move(), HandleGroundMovementInput())
 void AClimbingSystem53Character::Move(const FInputActionValue& Value)
 {
 	if (!CustomMovementComponent) return;
@@ -147,8 +135,7 @@ void AClimbingSystem53Character::Move(const FInputActionValue& Value)
 	{
 		HandleGroundMovementInput(Value);
 	}
-	
-	// input is a Vector2D
+	// 현재 캐릭터가 등반 중인지 확인한 후, 적절한 이동 함수를 호출.
 	
 }
 
@@ -234,135 +221,3 @@ void AClimbingSystem53Character::OnClimbActionStarted(const FInputActionValue& V
 	}
 }
 
-
-
-
-void AClimbingSystem53Character::OnSwimAction(const FInputActionValue& Value)
-{
-	//Debug::Print(TEXT("Swim action started"));
-
-	if (!CustomMovementComponent) return;
-
-	if (!CustomMovementComponent->IsSwimming())
-	{
-		CustomMovementComponent->ToggleSwimming(true);
-	}
-	else
-	{
-		CustomMovementComponent->ToggleSwimming(false);
-	}
-}
-
-//-------------------------------------------------------
-/*캐릭터가 특정 키(예: H)를 누르면 비행 모드로 진입하고, 다시 누르면 걷기로 전환되도록 만들자.*/
-
-void AClimbingSystem53Character::StartFlying()
-{
-	bIsFlying = !bIsFlying; // 비행 모드 전환
-
-	if (bIsFlying)
-	{
-		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		UE_LOG(LogTemp, Warning, TEXT("Flying Mode Activated!"));
-	}
-	else
-	{
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		UE_LOG(LogTemp, Warning, TEXT("Flying Mode Deactivated!"));
-	}
-}
-
-void AClimbingSystem53Character::StopFlying()
-{
-	if (!bIsFlying) return;
-
-	// 비행 모드 비활성화
-	bIsFlying = false;
-
-	// 이동 모드를 걷기로 변경
-	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
-	// 현재 속도 초기화
-	GetCharacterMovement()->Velocity = FVector::ZeroVector;
-
-	UE_LOG(LogTemp, Warning, TEXT("Flying Mode Deactivated!"));
-}
-
-/*비행 모드에서는 캐릭터가 슈퍼맨처럼 전후좌우 및 상하로 이동해야 해.
-이를 위해 Tick() 함수에서 매 프레임마다 캐릭터의 이동을 계산하도록 만들자.*/
-
-void AClimbingSystem53Character::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (bIsFlying)
-	{
-		// 중력 무시
-		GetCharacterMovement()->Velocity.Z = 0.0f;
-
-		// 기울어지는 효과 추가
-		FRotator NewRotation = GetActorRotation();
-		NewRotation.Pitch = FMath::FInterpTo(NewRotation.Pitch, -GetVelocity().Z * 0.1f, DeltaTime, 2.0f);
-		SetActorRotation(NewRotation);
-	}
-}
-
-void AClimbingSystem53Character::FlyMoveForward(float Value)
-{
-	if (!bIsFlying || FMath::IsNearlyZero(Value)) return;
-
-	// 속도 증가
-	CurrentFlySpeed = FMath::FInterpTo(CurrentFlySpeed, FlyingSpeed, GetWorld()->GetDeltaSeconds(), FlyAcceleration);
-
-	FVector ForwardDir = GetActorForwardVector();
-	AddMovementInput(ForwardDir, Value * FlyingSpeed);
-}
-
-void AClimbingSystem53Character::FlyMoveRight(float Value)
-{
-	if (!bIsFlying || FMath::IsNearlyZero(Value)) return;
-
-	// 속도 증가
-	CurrentFlySpeed = FMath::FInterpTo(CurrentFlySpeed, FlyingSpeed, GetWorld()->GetDeltaSeconds(), FlyAcceleration);
-
-	FVector RightDir = GetActorRightVector();
-	AddMovementInput(RightDir, Value * FlyingSpeed);
-}
-
-void AClimbingSystem53Character::FlyUpDown(float Value)
-{
-	if (!bIsFlying) return;
-
-	FVector UpDir = FVector::UpVector;
-	AddMovementInput(UpDir, Value * FlyingSpeed);
-}
-
-void AClimbingSystem53Character::OnFlyAction(const FInputActionValue& Value)
-{
-	if (!bIsFlying)
-	{
-		StartFlying();
-	}
-	else
-	{
-		StopFlying();
-	}
-
-}
-//---------------------------------------------------------------
-/*  void AClimbingSystem53Character::OnFlyAction(const FInputActionValue& Value)
-{
-	//Debug::Print(TEXT("Fly action started"));
-
-	if (!CustomMovementComponent) return;
-
-	if (!CustomMovementComponent->IsFlying())
-	{
-		CustomMovementComponent->ToggleFlying(true);
-	}
-	else
-	{
-		CustomMovementComponent->ToggleFlying(false);   
-	}
-}
-*/

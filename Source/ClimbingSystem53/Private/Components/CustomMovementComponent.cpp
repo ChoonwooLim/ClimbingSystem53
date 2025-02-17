@@ -8,34 +8,39 @@
 
 #include "ClimbingSystem53/DebugHelper.h"
 
-
+//TickComponent() - 매 프레임 실행되는 함수
 void UCustomMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     /*TraceClimbableSurfaces();
     TraceFromEyeHeight(100.f);*/
+
+    /*매 프레임(Tick) 실행되는 이동 로직을 처리.
+      현재 TraceClimbableSurfaces()와 TraceFromEyeHeight(100.f)는 주석 처리됨(디버깅 용도로 사용).
+      주석을 해제하면 벽을 감지하는 트레이스를 매 프레임 실행할 수 있음.*/
 }
 
+//OnMovementModeChanged() - 이동 모드 변경 시 호출
 void UCustomMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
     if(IsClimbing()) // 벽 타기 모드 진입 시
     { 
-    bOrientRotationToMovement = false;
-    CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(48.f);
+    bOrientRotationToMovement = false; //이동 방향에 따라 자동 회전하지 않음.
+    CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(48.f); //등반 시 캐릭터의 충돌 크기를 줄임.
     }
 
     else if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == ECustomMovementMode::MOVE_Climb)// 벽 타기에서 벗어날 때
     {
-        bOrientRotationToMovement = true; 
-        CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(96.f);
+        bOrientRotationToMovement = true;  //이동 방향에 따라 자동 회전 활성화.
+        CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(96.f); //캐릭터가 서 있을 때 정상 크기로 변경.
 
         // 캐릭터 회전 초기화 (Yaw 유지)
-        const FRotator NewRotation(0.f, UpdatedComponent->GetComponentRotation().Yaw, 0.f);
+        const FRotator NewRotation(0.f, UpdatedComponent->GetComponentRotation().Yaw, 0.f); //Yaw(좌우 회전) 값 유지하면서 회전 초기화
         
         UpdatedComponent->SetRelativeRotation(NewRotation);
 
         // 즉시 정지
-        StopMovementImmediately();
+        StopMovementImmediately(); //등반을 멈추면 속도를 0으로 설정.
     }
 
     // 부모 클래스의 기본 이동 모드 변경 로직 수행
@@ -43,6 +48,7 @@ void UCustomMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovem
 
 }
 
+//PhysCustom() - 사용자 정의 이동 모드 처리
 void UCustomMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
 {
     if (IsClimbing())
@@ -51,6 +57,9 @@ void UCustomMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
     }
 
     Super::PhysCustom(deltaTime, Iterations);
+    /*PhysCustom()는 UE5의 PhysWalking()과 같은 역할을 하며, 사용자 정의 이동 모드에 대한 물리 연산을 처리.
+       IsClimbing()이면 PhysClimb()를 실행하여 등반 물리 연산을 처리.*/
+
 }
 
 float UCustomMovementComponent::GetMaxSpeed() const
@@ -155,89 +164,6 @@ FHitResult UCustomMovementComponent::DoLineTraceSingleByObject(const FVector& St
 
 #pragma endregion
 
-#pragma region Swim State
-
-void UCustomMovementComponent::TraceSwimableSurfaces()
-{
-    if (!CharacterOwner) return;
-
-    FVector Start = CharacterOwner->GetActorLocation();
-    FVector End = Start - FVector(0, 0, 200.0f); // 아래로 200 유닛 체크
-
-    FHitResult HitResult;
-    FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(CharacterOwner);
-
-    // 바닥 트레이스 실행
-    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, QueryParams);
-
-    if (bHit && HitResult.bBlockingHit)
-    {
-        // 감지된 서페이스가 수영 가능한지 확인
-        if (IsWaterSurface(HitResult))
-        {
-            EnterSwimmingMode();
-        }
-    }
-}
-
-bool UCustomMovementComponent::IsWaterSurface(const FHitResult& HitResult) const
-{
-    if (!HitResult.GetActor()) return false;
-
-    // 예제: 특정 물 머티리얼이 적용된 서페이스인지 확인
-    UPrimitiveComponent* HitComponent = HitResult.GetComponent();
-    if (HitComponent && HitComponent->GetMaterial(0))
-    {
-        FString MaterialName = HitComponent->GetMaterial(0)->GetName();
-        return MaterialName.Contains(TEXT("Water"));
-    }
-
-    return false;
-}
-
-void UCustomMovementComponent::EnterSwimmingMode()
-{
-    if (MovementMode != MOVE_Swimming)
-    {
-        SetMovementMode(MOVE_Swimming);
-        UE_LOG(LogTemp, Log, TEXT("Entered Swimming Mode"));
-    }
-}
-
-bool UCustomMovementComponent::IsInWater() const
-{
-    FVector Location = CharacterOwner->GetActorLocation();
-    FVector WaterTestLocation = Location + FVector(0, 0, -50.0f); // 50 유닛 아래 확인
-
-    FHitResult HitResult;
-    FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(CharacterOwner);
-
-    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Location, WaterTestLocation, ECC_WorldStatic, QueryParams);
-
-    return bHit && IsWaterSurface(HitResult);
-}
-
-/*설명
- TraceSwimableSurfaces()
-캐릭터 위치 아래로 라인 트레이스 수행하여 서페이스 체크
-감지된 경우 IsWaterSurface() 함수를 호출하여 수영 가능한 서페이스인지 확인
-수영 가능하면 EnterSwimmingMode() 호출하여 수영 모드로 전환
-
-IsWaterSurface()
-감지된 서페이스의 머티리얼 이름이 "Water"을 포함하면 물이라고 간주
-필요하면 커스텀 태그나 물 볼륨을 감지하는 방식으로 변경 가능
-EnterSwimmingMode()
-
-현재 이동 모드가 MOVE_Swimming이 아니라면 수영 모드로 변경
-SetMovementMode(MOVE_Swimming); 호출
-
-IsInWater()
-캐릭터 위치에서 아래로 라인 트레이스를 수행하여 물에 있는지 확인
-게임플레이 중 계속 물이 있는지 체크하는 데 사용*/
-
-#pragma endregion
 
 void UCustomMovementComponent::ToggleClimbing(bool bEnableClimb)
 {
@@ -255,49 +181,6 @@ void UCustomMovementComponent::ToggleClimbing(bool bEnableClimb)
     {
         StopClimbing();
     }
-}
-
-void UCustomMovementComponent::ToggleSwimming(bool bEnableSwim)
-{
-    if (bEnableSwim)
-    {
-        if (CanStartSwimming())
-        {
-            SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swim);
-            Debug::Print(TEXT("Entered Swimming Mode"));
-        }
-        else
-        {
-            Debug::Print(TEXT("Cannot enter Swimming Mode"));
-        }
-    }
-    else
-    {
-        SetMovementMode(MOVE_Walking);
-        Debug::Print(TEXT("Exited Swimming Mode"));
-    }
-}
-
-void UCustomMovementComponent::ToggleFlying(bool bEnableFly)
-{
-    if (bEnableFly)
-    {
-        if (CanStartFlying())
-        {
-            SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Fly);
-            Debug::Print(TEXT("Entered Flying Mode"));
-        }
-        else
-        {
-            Debug::Print(TEXT("Cannot enter Flying Mode"));
-        }
-    }
-    else
-    {
-        SetMovementMode(MOVE_Walking);
-        Debug::Print(TEXT("Exited Flying Mode"));
-    }
-
 }
 
 
@@ -334,11 +217,11 @@ void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Un
             //MIN_TICK_TIME보다 작은 경우 너무 짧은 시간(=무시할 수 있을 정도로 작은 시간)이므로 아예 이동 계산을 하지 않고 리턴.
         }
             /*Process all the climbable surface info*/
-        TraceClimbableSurfaces();
-        ProcessClimbableSurfaceInfo();
+        TraceClimbableSurfaces(); //등반 가능한 벽 감지
+        ProcessClimbableSurfaceInfo(); //감지된 벽 정보를 처리
 
             /*Check if we should climbing*/
-        if (CheckShouldStopClimbing())
+        if (CheckShouldStopClimbing()) //등반을 계속할 수 있는지 확인
         {
             StopClimbing();
         }
@@ -540,30 +423,10 @@ void UCustomMovementComponent::SnapMovementToClimbableSurfaces(float DeltaTime)
 */
 }
 
-bool UCustomMovementComponent::CanStartSwimming()
-{
-    return IsInWater(); // 물 속에 있는지 확인하여 수영 가능 여부 반환
-}
-
-bool UCustomMovementComponent::CanStartFlying()
-{
-    return IsFalling(); // 공중에 있을 때만 비행 가능하도록 설정
-}
-
 
 bool UCustomMovementComponent::IsClimbing() const
 {
     return MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::MOVE_Climb;
-}
-
-bool UCustomMovementComponent::IsSwimming() const
-{
-    return MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::MOVE_Swim;
-}
-
-bool UCustomMovementComponent::IsFlying() const
-{
-    return MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::MOVE_Fly;
 }
 
 
