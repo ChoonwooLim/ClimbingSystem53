@@ -198,8 +198,8 @@ void AClimbingSystem53Character::HandleClimbMovementInput(const FInputActionValu
 
 	// 벽 표면을 따라 좌우 이동 방향 계산
 	const FVector RightDirection = FVector::CrossProduct(
-		GetActorForwardVector(),
-		-CustomMovementComponent->GetClimbableSurfaceNormal()
+		-CustomMovementComponent->GetClimbableSurfaceNormal(), // 벽의 법선
+		- GetActorUpVector() // 캐릭터의 위쪽 방향
 	).GetSafeNormal();
 
 	// 이동 입력 적용
