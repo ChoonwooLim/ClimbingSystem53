@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ClimbingSystem53Character.h"
 #include "Engine/LocalPlayer.h"
@@ -31,12 +31,12 @@ AClimbingSystem53Character::AClimbingSystem53Character(const FObjectInitializer&
 //------------------------------------------------------------------------------
 	PrimaryActorTick.bCanEverTick = true;
 
-	bIsFlying = false;  // �⺻������ ���� ���°� �ƴ�
-	FlyingSpeed = 1200.0f; // ���� �ӵ� ����
+	bIsFlying = false;  // 기본적으로 비행 상태가 아님
+	FlyingSpeed = 1200.0f; // 비행 속도 설정
 
-	//�ӵ� ��ȭ ���� �߰�
+	//속도 변화 로직 추가
 	CurrentFlySpeed = 0.0f;
-	FlyAcceleration = 500.0f; // ������ ���ӵ�
+	FlyAcceleration = 500.0f; // 점진적 가속도
 //-------------------------------------------------------------------------------
 	
 	CustomMovementComponent = Cast<UCustomMovementComponent>(GetCharacterMovement());
@@ -93,14 +93,14 @@ void AClimbingSystem53Character::BeginPlay()
 void AClimbingSystem53Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	//--------------------------------------------------------------
-	/*ĳ���Ͱ� Ư�� Ű(��: F)�� ������ ���� ���� �����ϰ�, �ٽ� ������ �ȱ�� ��ȯ�ǵ��� ������.*/
+	/*캐릭터가 특정 키(예: F)를 누르면 비행 모드로 진입하고, 다시 누르면 걷기로 전환되도록 만들자.*/
 
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// ���� ��� ��ȯ (H Ű)
+	// 비행 모드 전환 (H 키)
 	PlayerInputComponent->BindAction("ToggleFly", IE_Pressed, this, &AClimbingSystem53Character::StartFlying);
 
-	// ���� ���� ����
+	// 비행 방향 조작
 	PlayerInputComponent->BindAxis("MoveForward", this, &AClimbingSystem53Character::FlyMoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AClimbingSystem53Character::FlyMoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &AClimbingSystem53Character::FlyUpDown);
@@ -137,25 +137,74 @@ void AClimbingSystem53Character::SetupPlayerInputComponent(UInputComponent* Play
 
 void AClimbingSystem53Character::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	if (!CustomMovementComponent) return;
 
-	if (Controller != nullptr)
+	if(CustomMovementComponent->IsClimbing())
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		HandleClimbMovementInput(Value);
 	}
+	else
+	{
+		HandleGroundMovementInput(Value);
+	}
+	
+	// input is a Vector2D
+	
+}
+
+/*이 함수는 지상 이동 입력을 처리하는 기능을 수행합니다.
+  즉, 플레이어의 입력(방향키 또는 조이스틱 방향값)을 받아 이동 벡터를 계산하고, 이를 적용하는 역할을 합니다.*/
+void AClimbingSystem53Character::HandleGroundMovementInput(const FInputActionValue& Value)
+{
+	if (!Controller) return; // 컨트롤러가 있는지 확인
+	/*플레이어 캐릭터는 Controller를 통해 조작됩니다.
+      Controller가 없는 경우(예: AI 또는 초기화되지 않은 상태)에는 이동을 처리하지 않도록 방어 코드가 포함되어 있습니다.*/
+
+	const FVector2D MovementVector = Value.Get<FVector2D>(); //입력 값 처리
+	/*입력 값(Value)을 FVector2D로 변환하여 MovementVector 변수에 저장합니다.
+       FVector2D는 2D 벡터 (X, Y)로, 일반적으로 X는 좌우 이동, Y는 앞뒤 이동을 의미합니다.
+     💡 결과: MovementVector.X → 좌우 이동 입력 값
+                  MovementVector.Y → 앞뒤 이동 입력 값*/
+
+	// 현재 컨트롤러의 카메라 회전값을 가져와 Yaw만 사용
+	const FRotator YawRotation(0, Controller->GetControlRotation().Yaw, 0);
+
+	// 전방 및 우측 벡터 계산 (간단한 방법 사용)
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X); //현재 카메라 방향을 기준으로 전방(X축) 이동 벡터를 가져옵니다.
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y); // 현재 카메라 방향을 기준으로 우측(Y축) 이동 벡터를 가져옵니다.
+
+	// 이동 입력 적용
+	AddMovementInput(ForwardDirection, MovementVector.Y); //Y 입력 값(MovementVector.Y)을 ForwardDirection에 곱해 전진/후진 이동을 수행합니다.
+	AddMovementInput(RightDirection, MovementVector.X); //X 입력 값(MovementVector.X)을 RightDirection에 곱해 좌우 이동을 수행합니다.
+	/*AddMovementInput()는 Unreal Engine의 CharacterMovementComponent를 통해 캐릭터의 이동을 처리합니다.
+     💡 결과: W/S 또는 Up/Down 키 → 카메라 기준 앞뒤 이동
+                  A/D 또는 Left/Right 키 → 카메라 기준 좌우 이동*/
+
+}
+
+/*이 함수는 벽을 타고 이동할 때 입력을 처리하는 기능을 수행합니다.
+즉, 캐릭터가 벽을 탈 때 이동 방향을 결정하고, 이동 입력을 적용하는 역할을 합니다.*/
+void AClimbingSystem53Character::HandleClimbMovementInput(const FInputActionValue& Value)
+{
+	if (!CustomMovementComponent) return; // 안전 체크 추가
+
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+
+	// 벽 표면을 따라 위/아래 이동 방향 계산
+	const FVector ForwardDirection = FVector::CrossProduct(
+		-CustomMovementComponent->GetClimbableSurfaceNormal(),
+		GetActorRightVector()
+	).GetSafeNormal(); // 정규화하여 크기를 1로 맞춤
+
+	// 벽 표면을 따라 좌우 이동 방향 계산
+	const FVector RightDirection = FVector::CrossProduct(
+		GetActorForwardVector(),
+		-CustomMovementComponent->GetClimbableSurfaceNormal()
+	).GetSafeNormal();
+
+	// 이동 입력 적용
+	AddMovementInput(ForwardDirection, MovementVector.Y);
+	AddMovementInput(RightDirection, MovementVector.X);
 }
 
 void AClimbingSystem53Character::Look(const FInputActionValue& Value)
@@ -173,8 +222,6 @@ void AClimbingSystem53Character::Look(const FInputActionValue& Value)
 
 void AClimbingSystem53Character::OnClimbActionStarted(const FInputActionValue& Value)
 {
-	//Debug::Print(TEXT("Climb action started"));
-
 	if (!CustomMovementComponent) return;
 
 	if (!CustomMovementComponent->IsClimbing())
@@ -186,6 +233,9 @@ void AClimbingSystem53Character::OnClimbActionStarted(const FInputActionValue& V
 		CustomMovementComponent->ToggleClimbing(false);
 	}
 }
+
+
+
 
 void AClimbingSystem53Character::OnSwimAction(const FInputActionValue& Value)
 {
@@ -204,11 +254,11 @@ void AClimbingSystem53Character::OnSwimAction(const FInputActionValue& Value)
 }
 
 //-------------------------------------------------------
-/*ĳ���Ͱ� Ư�� Ű(��: F)�� ������ ���� ���� �����ϰ�, �ٽ� ������ �ȱ�� ��ȯ�ǵ��� ������.*/
+/*캐릭터가 특정 키(예: H)를 누르면 비행 모드로 진입하고, 다시 누르면 걷기로 전환되도록 만들자.*/
 
 void AClimbingSystem53Character::StartFlying()
 {
-	bIsFlying = !bIsFlying; // ���� ��� ��ȯ
+	bIsFlying = !bIsFlying; // 비행 모드 전환
 
 	if (bIsFlying)
 	{
@@ -226,20 +276,20 @@ void AClimbingSystem53Character::StopFlying()
 {
 	if (!bIsFlying) return;
 
-	// ���� ��� ��Ȱ��ȭ
+	// 비행 모드 비활성화
 	bIsFlying = false;
 
-	// �̵� ��带 �ȱ�� ����
+	// 이동 모드를 걷기로 변경
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
-	// ���� �ӵ� �ʱ�ȭ
+	// 현재 속도 초기화
 	GetCharacterMovement()->Velocity = FVector::ZeroVector;
 
 	UE_LOG(LogTemp, Warning, TEXT("Flying Mode Deactivated!"));
 }
 
-/*���� ��忡���� ĳ���Ͱ� ���۸�ó�� �����¿� �� ���Ϸ� �̵��ؾ� ��.
-�̸� ���� Tick() �Լ����� �� �����Ӹ��� ĳ������ �̵��� ����ϵ��� ������.*/
+/*비행 모드에서는 캐릭터가 슈퍼맨처럼 전후좌우 및 상하로 이동해야 해.
+이를 위해 Tick() 함수에서 매 프레임마다 캐릭터의 이동을 계산하도록 만들자.*/
 
 void AClimbingSystem53Character::Tick(float DeltaTime)
 {
@@ -247,10 +297,10 @@ void AClimbingSystem53Character::Tick(float DeltaTime)
 
 	if (bIsFlying)
 	{
-		// �߷� ����
+		// 중력 무시
 		GetCharacterMovement()->Velocity.Z = 0.0f;
 
-		// �������� ȿ�� �߰�
+		// 기울어지는 효과 추가
 		FRotator NewRotation = GetActorRotation();
 		NewRotation.Pitch = FMath::FInterpTo(NewRotation.Pitch, -GetVelocity().Z * 0.1f, DeltaTime, 2.0f);
 		SetActorRotation(NewRotation);
@@ -261,7 +311,7 @@ void AClimbingSystem53Character::FlyMoveForward(float Value)
 {
 	if (!bIsFlying || FMath::IsNearlyZero(Value)) return;
 
-	// �ӵ� ����
+	// 속도 증가
 	CurrentFlySpeed = FMath::FInterpTo(CurrentFlySpeed, FlyingSpeed, GetWorld()->GetDeltaSeconds(), FlyAcceleration);
 
 	FVector ForwardDir = GetActorForwardVector();
@@ -272,7 +322,7 @@ void AClimbingSystem53Character::FlyMoveRight(float Value)
 {
 	if (!bIsFlying || FMath::IsNearlyZero(Value)) return;
 
-	// �ӵ� ����
+	// 속도 증가
 	CurrentFlySpeed = FMath::FInterpTo(CurrentFlySpeed, FlyingSpeed, GetWorld()->GetDeltaSeconds(), FlyAcceleration);
 
 	FVector RightDir = GetActorRightVector();

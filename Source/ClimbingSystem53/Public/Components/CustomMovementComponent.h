@@ -138,6 +138,7 @@ private:
 public:
 	void ToggleClimbing(bool bEnableClimb);
 	bool IsClimbing() const; // 멤버 변수를 변경하지 않음
+	FORCEINLINE FVector GetClimbableSurfaceNormal() const { return CurrentClimbableSurfaceNomal; }
 
 	void ToggleSwimming(bool bEnableClimb);
 	bool IsSwimming() const;
