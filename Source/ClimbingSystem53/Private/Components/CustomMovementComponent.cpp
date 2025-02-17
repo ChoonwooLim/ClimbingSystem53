@@ -46,6 +46,30 @@ void UCustomMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
     Super::PhysCustom(deltaTime, Iterations);
 }
 
+float UCustomMovementComponent::GetMaxSpeed() const
+{
+    if (IsClimbing())
+    {
+        return MaxClimbSpeed;
+    }
+    else
+    {
+        return Super::GetMaxSpeed();
+    }
+}
+
+float UCustomMovementComponent::GetMaxAcceleration() const
+{
+    if (IsClimbing())
+    {
+        return MaxClimbAcceleration;
+    }
+    else
+    {
+        return Super::GetMaxAcceleration();
+    }
+}
+
 
 #pragma region ClimbTraces
 
@@ -331,7 +355,7 @@ void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Un
         FHitResult Hit(1.f); // 충돌 정보를 저장할 구조체 초기화 (Hit.Time = 1.f은 충돌 없음 상태).
 
         // Handle climb rotation
-        SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit); //벽을 따라 이동 수행
+        SafeMoveUpdatedComponent(Adjusted, GetClimbRotation(deltaTime), true, Hit); //벽을 따라 이동 수행
         /*SafeMoveUpdatedComponent()
            Adjusted(이동 거리)만큼 이동을 시도.
            충돌 발생 시 Hit에 충돌 정보 저장.
@@ -358,6 +382,7 @@ void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Un
         }
 
         /*Snap movement to climbable surfaces*/
+        SnapMovementToClimbableSurfaces(deltaTime);
 
 }
 
@@ -399,8 +424,78 @@ void UCustomMovementComponent::ProcessClimbableSurfaceInfo() //감지된 클라�
       GetSafeNormal() 함수는 벡터의 길이를 1로 조정하며, 만약 벡터의 길이가 0에 가까우면 안전하게 처리.
      📌 이렇게 하면 벽 방향을 정확하게 정할 수 있으며, 이동 방향 보정에 사용할 수 있음.*/
 
-    Debug::Print(TEXT("CurrentClimbableSurfaceLocation: ") + CurrentClimbableSurfaceLocation.ToCompactString(), FColor::Cyan, 1);
-    Debug::Print(TEXT("CurrentClimbableSurfaceNomal: ") + CurrentClimbableSurfaceNomal.ToCompactString(), FColor::Red, 2);
+}
+
+
+/*함수 개요
+  목적: 현재 UpdatedComponent의 회전을 가져오고, 목표 회전(TargetQuat)을 계산한 후, 일정한 속도로 현재 회전에서 목표 회전으로 보간(lerp)하는 역할을 합니다.
+  주요 역할: 벽을 타고 오를 때, 캐릭터의 방향을 벽의 표면 방향에 맞추기 위해 사용됩니다.
+*/
+FQuat UCustomMovementComponent::GetClimbRotation(float DeltaTime)
+{
+    const FQuat CurrentQuat = UpdatedComponent->GetComponentQuat(); //현재 회전 가져오기
+    /*현재 UpdatedComponent(캐릭터의 충돌 캡슐 또는 메쉬)의 회전(FQuat)을 가져옵니다.
+      이 값을 기반으로 현재 회전 상태를 유지하거나, 새로운 목표 회전 값으로 보간할 수 있습니다.*/
+
+    if (HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity()) //루트 모션 또는 외부 힘이 적용된 경우 현재 회전 유지
+    {
+        return CurrentQuat;
+    }
+    /*루트 모션(HasAnimRootMotion())이 적용된 경우
+      애니메이션이 직접 캐릭터의 움직임을 제어하는 상태이므로 별도로 회전을 변경하지 않습니다.
+      현재 루트 모션에 강제 속도 오버라이드(HasOverrideVelocity())가 적용된 경우
+      특정한 외부 움직임(예: 시네마틱, 강제 이동)이 있는 경우도 회전을 변경하지 않습니다.
+       결론: 이 두 조건이 만족되면 현재 회전(CurrentQuat)을 그대로 반환하여 변경하지 않습니다.*/
+
+    const FQuat TargetQuat = FRotationMatrix::MakeFromX(-CurrentClimbableSurfaceNomal).ToQuat(); //목표 회전값 설정
+    /*FRotationMatrix::MakeFromX(Vector).ToQuat()을 사용하여 새로운 방향을 기반으로 회전(FQuat)을 생성합니다.
+       CurrentClimbableSurfaceNomal는 현재 플레이어가 오르고 있는 벽의 법선 벡터입니다.
+       -CurrentClimbableSurfaceNomal를 사용한 이유:
+       법선 벡터는 벽의 수직 방향을 나타내지만, 캐릭터는 벽을 바라보도록 해야 하므로 음수(-)를 취해 방향을 반전시킵니다.
+       즉, 벽의 법선 방향과 반대 방향으로 캐릭터가 향하도록 회전 값을 설정하는 것입니다. */
+
+    return FMath::QInterpTo(CurrentQuat, TargetQuat, DeltaTime, 5.f); //보간하여 최종 회전값 반환
+     /*FMath::QInterpTo를 사용하여 현재 회전에서 목표 회전으로 보간(lerp)합니다.
+       DeltaTime을 사용하여 프레임 독립적인 보간을 수행합니다.
+        5.f는 보간 속도를 의미합니다. 값이 클수록 빠르게 목표 회전값으로 이동합니다.*/
+}
+
+/*이 함수는 캐릭터를 현재 오르고 있는 벽(Climbable Surface)에 맞춰 부드럽게 정렬하는 역할을 합니다. 
+  즉, 캐릭터가 벽에서 너무 멀어지거나 잘못된 위치로 움직이지 않도록 조정하는 역할을 합니다.*/
+void UCustomMovementComponent::SnapMovementToClimbableSurfaces(float DeltaTime)
+{
+    //캐릭터의 현재 방향 및 위치 가져오기
+    const FVector ComponentForward = UpdatedComponent->GetForwardVector(); //(캐릭터)의 정면 방향 벡터 (ForwardVector)를 가져옵니다.
+    const FVector ComponentLocation = UpdatedComponent->GetComponentLocation(); //UpdatedComponent의 현재 월드 위치를 가져옵니다.
+
+    //벽과의 거리(투영) 계산
+    const FVector ProjectedCharacterToSurface =
+        (CurrentClimbableSurfaceLocation - ComponentLocation).ProjectOnTo(ComponentForward);
+    /*CurrentClimbableSurfaceLocation → 현재 캐릭터가 오르는 벽의 위치.
+      (CurrentClimbableSurfaceLocation - ComponentLocation) → 캐릭터에서 벽까지의 벡터.
+       ProjectOnTo(ComponentForward) → 이 벡터를 캐릭터의 ForwardVector에 투영하여, 캐릭터의 정면 방향으로 벽까지 얼마나 떨어져 있는지 계산.
+    💡 결과: ProjectedCharacterToSurface는 캐릭터의 정면 방향 기준으로 벽까지의 거리입니다.
+                이 값이 크다면, 캐릭터가 벽에서 떨어져 있다는 뜻이며, 작다면 벽에 가까운 상태입니다.*/
+
+    //벽을 향한 이동 벡터 계산
+    const FVector SnapVector = -CurrentClimbableSurfaceNomal * ProjectedCharacterToSurface.Length();
+    /*CurrentClimbableSurfaceNomal: 현재 벽의 법선 벡터 (벽이 바라보는 방향).
+       ProjectedCharacterToSurface.Length(): 벽과 캐릭터 사이의 거리 (정면 방향 기준).
+     💡 결과: SnapVector는 벽의 법선 방향(-CurrentClimbableSurfaceNomal)을 따라 벽까지의 거리만큼 이동하도록 설정된 벡터입니다.
+                  즉, 캐릭터가 벽에서 너무 멀리 떨어졌다면, 다시 벽 쪽으로 붙도록 이동하는 힘을 제공합니다.*/
+
+   //캐릭터를 벽 쪽으로 이동
+    UpdatedComponent->MoveComponent(
+        SnapVector * DeltaTime * MaxClimbSpeed,
+        UpdatedComponent->GetComponentQuat(),
+        true);
+    /*MoveComponent()를 사용하여 SnapVector 방향으로 캐릭터를 움직입니다.
+      이동 속도는 MaxClimbSpeed를 곱하여 조절되며, DeltaTime을 곱해 프레임 독립적인 이동을 보장합니다.
+      현재 회전(UpdatedComponent->GetComponentQuat())은 유지하면서 이동합니다.
+      마지막 인수 true는 Sweep을 활성화하여 충돌을 감지할 수 있도록 합니다.
+     💡 결과: 캐릭터가 벽과의 거리(SnapVector)만큼 부드럽게 이동하며, 벽에서 떨어지지 않고 계속 밀착된 상태를 유지합니다.
+
+*/
 }
 
 bool UCustomMovementComponent::CanStartSwimming()
