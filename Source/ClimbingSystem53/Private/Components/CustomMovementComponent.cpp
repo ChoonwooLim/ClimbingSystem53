@@ -591,7 +591,7 @@ bool UCustomMovementComponent::TraceClimbableSurfaces()
        This defines the trace direction.
        End Position = Start Position + 1 Unit Forward.*/
 
-    ClimbableSurfacesTrasedResults = DoCapsuleTraceMultiByObject(Start,End,true);
+    ClimbableSurfacesTrasedResults = DoCapsuleTraceMultiByObject(Start,End);
 
     return !ClimbableSurfacesTrasedResults.IsEmpty();
     /*Calls DoCapsuleTraceMultiByObject(), which performs the actual capsule trace.
