@@ -341,6 +341,10 @@ void UCustomMovementComponent::PhysClimb(float deltaTime, int32 Iterations) //Un
         ProcessClimbableSurfaceInfo();
 
             /*Check if we should climbing*/
+        if (CheckShouldStopClimbing())
+        {
+            StopClimbing();
+        }
 
         RestorePreAdditiveRootMotionVelocity(); //루트 모션 속도 복원
         /* 루트 모션을 사용하는 애니메이션(Root Motion)이 있는 경우, 속도를 복원.
@@ -433,6 +437,42 @@ void UCustomMovementComponent::ProcessClimbableSurfaceInfo() //감지된 클라�
 
 }
 
+
+/*이 함수는 캐릭터가 벽 타기를 계속할 수 있는지 여부를 판단하는 역할을 합니다.
+  즉, 벽이 너무 기울어지거나, 벽이 더 이상 존재하지 않으면 벽 타기를 중단해야 합니다.*/
+bool UCustomMovementComponent::CheckShouldStopClimbing()
+{
+    // 1. 벽이 감지되지 않으면 벽 타기 중단
+    if (ClimbableSurfacesTrasedResults.IsEmpty()) return true;
+
+    // 2. 현재 벽과 위쪽 방향의 각도 차이 계산
+    const float DotResult = FVector::DotProduct(CurrentClimbableSurfaceNomal, FVector::UpVector);
+    const float DegreeDiff = FMath::RadiansToDegrees(FMath::Acos(DotResult));
+    /*CurrentClimbableSurfaceNomal → 현재 캐릭터가 타고 있는 벽의 법선 벡터.
+       FVector::UpVector → 월드 기준 위쪽 방향((0,0,1))
+       FVector::DotProduct(A, B)
+       두 벡터의 내적(Dot Product) 값 계산.
+       내적 값이 1이면 벡터가 같은 방향, 0이면 수직, -1이면 반대 방향.
+       FMath::Acos(DotResult)을 사용하여 두 벡터 사이의 각도를 계산.
+       FMath::RadiansToDegrees()를 사용하여 라디안을 도(degree) 단위로 변환.
+   💡 결과: DegreeDiff는 벽과 위쪽 방향(UpVector) 사이의 기울기 각도를 나타냄.
+        90도 이상이면 거의 수평(바닥), 0도면 수직(완전한 벽). */
+
+        // 벽이 너무 기울어져 있으면 벽 타기 중단 (예: 60도 이하이면 불가능)
+    if (DegreeDiff <= 60.f)
+    {
+        return true;
+    }
+
+
+    // 3. 디버그 출력
+    Debug::Print(TEXT("Degree Diff: ") + FString::SanitizeFloat(DegreeDiff), FColor::Cyan, 1);
+
+    
+   
+
+    return false; // 벽이 존재하면 무조건 벽 타기를 계속 진행하도록 설계됨.
+}
 
 /*함수 개요
   목적: 현재 UpdatedComponent의 회전을 가져오고, 목표 회전(TargetQuat)을 계산한 후, 일정한 속도로 현재 회전에서 목표 회전으로 보간(lerp)하는 역할을 합니다.
