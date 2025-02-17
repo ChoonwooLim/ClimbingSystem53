@@ -137,11 +137,17 @@
     </ClCompile>
     <ClInclude Include="..\..\Source\ClimbingSystem53\ClimbingSystem53GameMode.h"/>
     <ClInclude Include="..\..\Source\ClimbingSystem53\DebugHelper.h"/>
+    <ClCompile Include="..\..\Source\ClimbingSystem53\Private\AnimInstance\CharacterAnimInstance.cpp">
+      <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="..\..\Source\ClimbingSystem53\Private\Components\CustomMovementComponent.cpp">
       <AdditionalIncludeDirectories>$(ClCompile_AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ClCompile_ForcedIncludeFiles)</ForcedIncludeFiles>
       <AdditionalOptions>$(ClCompile_AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClInclude Include="..\..\Source\ClimbingSystem53\Public\AnimInstance\CharacterAnimInstance.h"/>
     <ClInclude Include="..\..\Source\ClimbingSystem53\Public\Components\CustomMovementComponent.h"/>
   </ItemGroup>
   <PropertyGroup>

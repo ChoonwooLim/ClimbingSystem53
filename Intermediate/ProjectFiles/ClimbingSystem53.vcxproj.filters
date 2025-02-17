@@ -62,6 +62,12 @@
     <Filter Include="Source\ClimbingSystem53\Private">
       <UniqueIdentifier>{B8634316-895C-3129-8AAD-9055D10B6B11}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\ClimbingSystem53\Private\AnimInstance">
+      <UniqueIdentifier>{CBB9564F-D862-39CA-8B40-86BC7A13707A}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\ClimbingSystem53\Private\AnimInstance\CharacterAnimInstance.cpp">
+      <Filter>Source\ClimbingSystem53\Private\AnimInstance</Filter>
+    </ClCompile>
     <Filter Include="Source\ClimbingSystem53\Private\Components">
       <UniqueIdentifier>{E7EC4DAC-CF87-3173-B511-C5571DA8B6F2}</UniqueIdentifier>
     </Filter>
@@ -71,6 +77,12 @@
     <Filter Include="Source\ClimbingSystem53\Public">
       <UniqueIdentifier>{A8103D5F-85BC-3907-B5D1-98C5BF55EB8B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\ClimbingSystem53\Public\AnimInstance">
+      <UniqueIdentifier>{910E143D-1A6E-3B90-B9F1-77CCBD6450AA}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\ClimbingSystem53\Public\AnimInstance\CharacterAnimInstance.h">
+      <Filter>Source\ClimbingSystem53\Public\AnimInstance</Filter>
+    </ClInclude>
     <Filter Include="Source\ClimbingSystem53\Public\Components">
       <UniqueIdentifier>{F1E9C952-695F-3757-B35E-4DC8EDE8C1F8}</UniqueIdentifier>
     </Filter>
